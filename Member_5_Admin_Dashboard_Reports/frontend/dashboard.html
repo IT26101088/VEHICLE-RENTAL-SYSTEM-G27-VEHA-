@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin dashboard — VEHA</title>
+  <meta name="description" content="Manage the VEHA fleet and bookings.">
+  <meta name="theme-color" content="#111a21">
+  <link rel="icon" href="../../Shared_Project/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../Shared_Project/assets/css/styles.css">
+  <link rel="stylesheet" href="../../Shared_Project/assets/css/dashboard.css">
+</head>
+<body>
+
+  <div class="dash">
+    <aside class="dash__sidebar">
+      <div class="dash__brand">
+        <a class="brand" href="index.html" aria-label="VEHA home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 5.5 12 19l7.5-13.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5.5l3 5.4 3-5.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></svg>
+          </span>
+          <span class="brand__word">VEHA<span class="brand__dot">.</span></span>
+        </a>
+        <span class="dash__tag">Admin</span>
+      </div>
+
+      <nav class="dash__nav" aria-label="Dashboard sections">
+        <span class="dash__nav-label">Workspace</span>
+        <a class="dash__link is-active" href="#overview" data-view="overview">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Overview
+        </a>
+        <a class="dash__link" href="#vehicles" data-view="vehicles">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M3 13l1.7-5.2A2 2 0 0 1 6.6 6.4h10.8a2 2 0 0 1 1.9 1.4L21 13v4a1 1 0 0 1-1 1h-1"/><circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/><path d="M3 13h18"/></svg>
+          Vehicles
+          <span class="dash__badge" id="navVehicleCount">0</span>
+        </a>
+        <a class="dash__link" href="#bookings" data-view="bookings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          Bookings
+          <span class="dash__badge" id="navBookingCount">0</span>
+        </a>
+        <a class="dash__link" href="#rented" data-view="rented">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+          Rented vehicles
+          <span class="dash__badge" id="navRentedCount">0</span>
+        </a>
+
+        <span class="dash__nav-label">Site</span>
+        <a class="dash__link" href="index.html">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Back to website
+        </a>
+      </nav>
+
+      <div class="dash__side-foot">
+        <div class="dash__demo">Demo workspace<br><span>Changes are stored in this browser only.</span></div>
+        <button class="dash__reset" type="button" data-reset-demo>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 1-.5 4"/></svg>
+          Reset demo data
+        </button>
+      </div>
+    </aside>
+
+    <div class="dash__main">
+      <header class="dash__topbar">
+        <div>
+          <span class="dash__eyebrow" id="viewEyebrow">Workspace</span>
+          <h1 id="viewTitle">Overview</h1>
+        </div>
+        <div class="dash__top-actions">
+          <a class="btn btn--ghost btn--sm" href="index.html">View site</a>
+          <div class="dash__admin">
+            <span class="avatar">AD</span>
+            <div><strong>Admin</strong><span>VEHA ops</span></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash__content">
+        <section class="dash-view" id="view-overview">
+          <div class="stat-cards" id="statCards"></div>
+
+          <div class="dash-grid">
+            <div class="dash-card">
+              <div class="dash-card__head">
+                <div><h2>Recent bookings</h2><p>Latest reservations across the fleet</p></div>
+                <button class="link-arrow" type="button" data-goto="bookings">All bookings
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <div class="table-wrap">
+                <table class="dash-table" id="recentBookings">
+                  <thead><tr><th>Booking</th><th>Vehicle</th><th>Dates</th><th>Total</th><th>Status</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="dash-card">
+              <div class="dash-card__head">
+                <div><h2>Fleet mix</h2><p>Vehicles by category</p></div>
+              </div>
+              <div class="fleet-mix" id="fleetMix"></div>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-card__head">
+              <div><h2>Quick actions</h2><p>Keep the fleet moving</p></div>
+            </div>
+            <div class="quick-actions__row">
+              <button class="quick-action" type="button" data-add-vehicle>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add a vehicle
+              </button>
+              <button class="quick-action" type="button" data-goto="bookings">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                Review bookings
+              </button>
+              <a class="quick-action" href="vehicles.html">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                Open storefront
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="dash-view" id="view-vehicles" hidden>
+          <div class="dash-card">
+            <div class="dash-card__head">
+              <div><h2>Fleet</h2><p id="vehicleTableSub">Vehicles in the fleet</p></div>
+              <div class="dash-tools">
+                <label class="dash-search">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                  <input type="search" id="vehicleSearch" placeholder="Search fleet" aria-label="Search fleet">
+                </label>
+                <select class="dash-select" id="vehicleSort" aria-label="Sort vehicles">
+                  <option value="default">Sort: fleet order</option>
+                  <option value="price-asc">Rent price: low to high</option>
+                  <option value="price-desc">Rent price: high to low</option>
+                  <option value="avail-asc">Availability: available first</option>
+                  <option value="avail-desc">Availability: rented first</option>
+                </select>
+                <button class="btn btn--primary btn--sm" type="button" data-add-vehicle>
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  Add vehicle
+                </button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="dash-table" id="vehicleTable">
+                <thead><tr><th>Vehicle</th><th>City</th><th>Price / day</th><th>Seats</th><th>Transmission</th><th>Availability</th><th class="align-right">Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dash-view" id="view-bookings" hidden>
+          <div class="dash-card">
+            <div class="dash-card__head">
+              <div><h2>Bookings</h2><p id="bookingTableSub">All reservations</p></div>
+              <div class="dash-tools">
+                <select class="dash-select" id="bookingFilter" aria-label="Filter bookings by status">
+                  <option value="all">All statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="dash-table" id="bookingTable">
+                <thead><tr><th>Reference</th><th>Customer</th><th>Vehicle</th><th>Dates</th><th>Total</th><th>Status</th><th class="align-right">Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dash-view" id="view-rented" hidden>
+          <div class="dash-card">
+            <div class="dash-card__head">
+              <div><h2>Rented vehicle records</h2><p id="rentedSub">Managed as a singly linked list</p></div>
+            </div>
+            <p class="ll-help">A record is added at the tail of the list when a booking is <strong>Confirmed</strong> and unlinked when it is <strong>Completed</strong>, Cancelled or deleted.</p>
+            <div class="ll-chain" id="rentedChain" aria-label="Linked list of rented vehicle records"></div>
+            <div class="table-wrap">
+              <table class="dash-table" id="rentedTable">
+                <thead><tr><th>Node</th><th>Rental</th><th>Vehicle</th><th>Customer</th><th>Dates</th><th>Status</th><th class="align-right">Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="vehicleModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__card dash-modal" role="dialog" aria-modal="true" aria-labelledby="vehicleModalTitle">
+      <button class="modal__close" type="button" data-close-modal aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h2 id="vehicleModalTitle">Add a vehicle</h2>
+      <p id="vehicleModalSub">Add a new ride to the VEHA fleet.</p>
+
+      <form id="vehicleForm" novalidate>
+        <div class="field">
+          <label for="vfName">Vehicle name</label>
+          <input type="text" id="vfName" placeholder="e.g. Toyota Axio" autocomplete="off">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="vfType">Type</label>
+            <select id="vfType"></select>
+          </div>
+          <div class="field">
+            <label for="vfCity">City</label>
+            <select id="vfCity"></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="vfPrice">Price per day (Rs)</label>
+            <input type="number" id="vfPrice" min="500" step="100" placeholder="9500">
+          </div>
+          <div class="field">
+            <label for="vfSeats">Seats</label>
+            <input type="number" id="vfSeats" min="1" max="70" placeholder="5">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="vfTrans">Transmission</label>
+            <select id="vfTrans">
+              <option>Automatic</option>
+              <option>Manual</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="vfFuel">Fuel</label>
+            <select id="vfFuel">
+              <option>Petrol</option>
+              <option>Diesel</option>
+              <option>Hybrid</option>
+              <option>Electric</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="vfYear">Model year</label>
+            <input type="number" id="vfYear" min="1990" max="2027" placeholder="2021">
+          </div>
+          <div class="field">
+            <label for="vfRating">Rating</label>
+            <input type="number" id="vfRating" min="1" max="5" step="0.1" placeholder="4.7">
+          </div>
+        </div>
+        <p class="form-error" id="vfError" role="alert"></p>
+        <div class="dash-modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-close-modal>Cancel</button>
+          <button class="btn btn--primary btn--sm" type="submit" id="vfSubmit">Add vehicle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../Shared_Project/assets/js/data.js"></script>
+  <script src="../../Shared_Project/assets/js/app.js"></script>
+  <script src="../../Shared_Project/assets/js/dashboard.js"></script>
+</body>
+</html>
