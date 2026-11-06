@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle details — VEHA</title>
+  <meta name="description" content="View vehicle specs, what's included and book your ride with VEHA.">
+  <meta name="theme-color" content="#faf6ef">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+  <header class="site-header" data-header>
+    <div class="container">
+      <nav class="nav" data-nav aria-label="Main navigation">
+        <a class="brand" href="index.html" aria-label="VEHA home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 5.5 12 19l7.5-13.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5.5l3 5.4 3-5.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></svg>
+          </span>
+          <span class="brand__word">VEHA<span class="brand__dot">.</span></span>
+        </a>
+
+        <div class="nav__links" id="navLinks">
+          <a href="index.html" data-nav-link="home">Home</a>
+          <a href="vehicles.html" data-nav-link="vehicles">Vehicles</a>
+          <a href="payments.html" data-nav-link="payments">Payments</a>
+          <a href="index.html#how">How it works</a>
+          <a href="index.html#why">Why VEHA</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+
+        <div class="nav__actions">
+          <div class="nav__auth" data-auth-slot>
+            <a class="nav__signin" href="auth.html?mode=login">Sign in</a>
+            <a class="btn btn--primary btn--sm nav__cta" href="vehicles.html">Book a ride</a>
+          </div>
+          <button class="nav__toggle" type="button" data-nav-toggle aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="detail-wrap">
+      <div class="container">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span aria-hidden="true">/</span>
+          <a href="vehicles.html">Vehicles</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" id="crumbName">Vehicle</span>
+        </nav>
+      </div>
+
+      <div class="container detail" id="detailRoot">
+        <div class="detail__main">
+          <div class="detail__media">
+            <img id="vdImage" src="assets/images/car.png" alt="Rental vehicle">
+            <span class="pill pill--type" id="vdType">Car</span>
+            <span class="pill pill--accent" id="vdTag" hidden></span>
+          </div>
+
+          <div class="detail__title-row">
+            <div>
+              <h1 id="vdName">Rental vehicle</h1>
+              <div class="detail__meta">
+                <span class="loc">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span id="vdCity">Colombo</span>
+                </span>
+                <span class="dot" aria-hidden="true"></span>
+                <span class="rating">
+                  <svg class="icon icon--star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>
+                  <span id="vdRating">4.8</span>
+                  <span class="reviews-count" id="vdReviews">(0 reviews)</span>
+                </span>
+                <span class="dot" aria-hidden="true"></span>
+                <span id="vdTrips">100+ trips</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="spec-grid" id="vdSpecs"></div>
+
+          <section class="panel">
+            <h2>About this vehicle</h2>
+            <p id="vdAbout"></p>
+          </section>
+
+          <section class="panel">
+            <h2>What's included</h2>
+            <ul class="includes">
+              <li>Basic insurance cover</li>
+              <li>Free cancellation up to 24h</li>
+              <li>24/7 roadside support</li>
+              <li>Verified owner handover</li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <div class="reviews-head">
+              <h2>Rider reviews</h2>
+              <div class="reviews-score"><strong id="vdScore">4.8</strong><span>out of 5</span></div>
+            </div>
+            <div id="vdReviewsList"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Good to know</h2>
+            <div class="note-grid">
+              <div class="note"><strong>Fuel policy</strong><span>Return the vehicle with the same fuel level as pick-up.</span></div>
+              <div class="note"><strong>Security deposit</strong><span>A refundable deposit is collected by the owner at handover.</span></div>
+              <div class="note"><strong>Cancellation</strong><span>Free cancellation up to 24 hours before your pick-up time.</span></div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="booking">
+          <div class="booking-card">
+            <div class="booking-card__top">
+              <div class="price price--lg"><strong id="bkPrice">Rs 0</strong><span>/ day</span></div>
+              <span class="rating">
+                <svg class="icon icon--star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>
+                <span id="bkRating">4.8</span>
+              </span>
+            </div>
+
+            <form class="booking-form" id="bookingForm" novalidate>
+              <div class="field">
+                <label for="bkCity">Pick-up city</label>
+                <select id="bkCity"></select>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="bkPickup">Pick-up</label>
+                  <input type="date" id="bkPickup" required>
+                </div>
+                <div class="field">
+                  <label for="bkReturn">Return</label>
+                  <input type="date" id="bkReturn" required>
+                </div>
+              </div>
+              <p class="form-error" id="bkError" role="alert"></p>
+
+              <fieldset class="extras">
+                <legend>Extras (per day)</legend>
+                <label class="extra" id="driverExtra">
+                  <input type="checkbox" id="exDriver" value="3500">
+                  <span>Professional driver <em>+Rs 3,500</em></span>
+                </label>
+                <label class="extra">
+                  <input type="checkbox" id="exIns" value="1200" checked>
+                  <span>Full insurance <em>+Rs 1,200</em></span>
+                </label>
+              </fieldset>
+
+              <div class="booking-summary">
+                <div><span id="sumRateLabel">Rs 0 × 1 day</span><strong id="sumRate">Rs 0</strong></div>
+                <div><span>Extras</span><strong id="sumExtras">Rs 0</strong></div>
+                <div><span>Service fee</span><strong>Rs 500</strong></div>
+                <div class="booking-summary__total"><span>Total</span><strong id="sumTotal">Rs 0</strong></div>
+              </div>
+
+              <button class="btn btn--primary btn--block" type="submit" id="reserveBtn">Reserve now</button>
+              <p class="booking-card__note">You won't be charged yet. The owner confirms availability within 1 hour.</p>
+            </form>
+          </div>
+
+          <div class="owner-card">
+            <span class="owner-card__icon">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </span>
+            <div>
+              <h3>VEHA verified partner</h3>
+              <p>Identity checked, vehicle inspected. Usually responds within 15 minutes.</p>
+              <span class="owner-card__badge">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-4-4"/></svg>
+                Verified owner
+              </span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section--paper similar">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Keep exploring</span>
+            <h2 class="section-title">You might also like</h2>
+          </div>
+          <a class="link-arrow" href="vehicles.html">Browse all vehicles
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="vehicle-grid" id="similarGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="bookingModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close-booking></div>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+      <button class="modal__close" type="button" data-close-booking aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="success-icon">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-4-4"/></svg>
+      </div>
+      <h2 id="bookingModalTitle">Booking requested</h2>
+      <p>Your ride is held. The owner will confirm availability shortly.</p>
+      <span class="modal__ref" id="bookingRef">VEH-000000</span>
+      <div class="modal__summary" id="bookingModalSummary"></div>
+      <div class="modal__actions">
+        <a class="btn btn--ghost" href="vehicles.html">Keep browsing</a>
+        <a class="btn btn--primary" href="bookings.html">View my bookings</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <a class="brand" href="index.html" aria-label="VEHA home">
+            <span class="brand__mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 5.5 12 19l7.5-13.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5.5l3 5.4 3-5.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></svg>
+            </span>
+            <span class="brand__word">VEHA<span class="brand__dot">.</span></span>
+          </a>
+          <p>Vehicles for every kind of journey — from a quick city scooter to a coach for the whole crew. Built in Sri Lanka, for Sri Lanka.</p>
+          <div class="footer__badges">
+            <span>Island-wide</span>
+            <span>Verified fleet</span>
+            <span>Local support</span>
+          </div>
+        </div>
+        <div class="footer__col">
+          <h3>Explore</h3>
+          <ul>
+            <li><a href="vehicles.html">All vehicles</a></li>
+            <li><a href="vehicles.html?type=car">Cars</a></li>
+            <li><a href="vehicles.html?type=van">Vans</a></li>
+            <li><a href="vehicles.html?type=bus">Buses</a></li>
+            <li><a href="vehicles.html?type=luxury">Luxury</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h3>Company</h3>
+          <ul>
+            <li><a href="index.html#how">How it works</a></li>
+            <li><a href="index.html#why">Why VEHA</a></li>
+            <li><a href="index.html#reviews">Rider stories</a></li>
+            <li data-admin-link><a href="dashboard.html">Admin dashboard</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h3>Get in touch</h3>
+          <ul class="footer__contact">
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>42 Galle Road, Colombo 03,<br>Sri Lanka</span>
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+              <a href="tel:+94112345678">+94 11 234 5678</a>
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+              <a href="mailto:hello@veha.lk">hello@veha.lk</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>© <span data-year>2026</span> VEHA. All rights reserved.</span>
+        <nav aria-label="Footer legal">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Cancellation policy</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/vehicle.js"></script>
+</body>
+</html>

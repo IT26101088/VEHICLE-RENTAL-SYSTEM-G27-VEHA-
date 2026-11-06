@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Member_1_User_Management/Member_1_User_Management.iml" filepath="$PROJECT_DIR$/Member_1_User_Management/Member_1_User_Management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Member_2_Vehicle_Management/Member_2_Vehicle_Management.iml" filepath="$PROJECT_DIR$/Member_2_Vehicle_Management/Member_2_Vehicle_Management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Member_3_Booking_Management/Member_3_Booking_Management.iml" filepath="$PROJECT_DIR$/Member_3_Booking_Management/Member_3_Booking_Management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Member_4_Payment_Rental_Cost/Member_4_Payment_Rental_Cost.iml" filepath="$PROJECT_DIR$/Member_4_Payment_Rental_Cost/Member_4_Payment_Rental_Cost.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Member_5_Admin_Dashboard_Reports/Member_5_Admin_Dashboard_Reports.iml" filepath="$PROJECT_DIR$/Member_5_Admin_Dashboard_Reports/Member_5_Admin_Dashboard_Reports.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Vehicle_Rental_Member_Split.iml" filepath="$PROJECT_DIR$/.idea/Vehicle_Rental_Member_Split.iml" />
+    </modules>
+  </component>
+</project>

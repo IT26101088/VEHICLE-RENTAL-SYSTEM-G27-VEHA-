@@ -1,0 +1,18 @@
+v1|Toyota Axio|car|Colombo|9500|5|Automatic|Petrol|2021|4.8|64|Popular|A light, easy-going sedan that's just as happy in Colombo traffic as it is on the Southern Expressway.
+v2|Toyota HiAce|van|Colombo|12500|12|Manual|Diesel|2019|4.7|42||The go-to van for family trips and airport runs, with room for luggage and a cool cabin.
+v3|Suzuki Every|van|Kandy|9000|7|Automatic|Petrol|2022|4.6|28||Compact, nippy and surprisingly roomy — ideal for hill country lanes and small groups.
+v4|Mitsubishi Rosa|bus|Colombo|28000|30|Manual|Diesel|2018|4.7|37||A comfortable mid-size coach for office outings, school trips and wedding shuttles.
+v5|Honda Vezel|car|Galle|14000|5|Automatic|Hybrid|2020|4.9|81|Top rated|A smooth hybrid crossover with a high ride and a cabin that stays quiet at speed.
+v6|Bajaj Pulsar 150|bike|Colombo|2800|2|Manual|Petrol|2022|4.5|19||A dependable street bike for quick solo runs along the coast or into the city.
+v7|Honda Dio|scooty|Galle|1900|2|Automatic|Petrol|2023|4.8|56|Local favourite|Light, automatic and effortless — the easiest way to zip around town.
+v8|Bajaj RE Tuk Tuk|threewheel|Kandy|3200|3|Manual|Petrol|2021|4.9|73|Island icon|The classic way to travel: open-air, nimble and made for short island hops.
+v9|Isuzu Elf Lorry|lorry|Colombo|18000|3|Manual|Diesel|2018|4.4|12||A solid light lorry for furniture moves, stock deliveries and site errands.
+v10|Mercedes-Benz E-Class|luxury|Colombo|38000|5|Automatic|Petrol|2022|5|34|Premium|Executive comfort with a quiet cabin and a little extra presence for the occasion.
+v11|BMW R 1250 GS|luxury|Colombo|15000|2|Manual|Petrol|2023|4.9|21||A proper adventure tourer for long coastal rides and the road to Ella.
+v12|Toyota Alphard|luxury|Colombo|32000|7|Automatic|Hybrid|2023|5|18|VIP pick|A lounge on wheels for VIP airport transfers and long family journeys.
+v13|Yutong Coach|luxury|Colombo|55000|45|Manual|Diesel|2022|4.8|9||A full-size coach for large groups, conferences and multi-day tours.
+v14|Toyota Prius|car|Negombo|10500|5|Automatic|Hybrid|2021|4.7|45||A frugal hybrid that sips fuel, with enough space for a small family.
+v15|Vespa Primavera|scooty|Colombo|3500|2|Automatic|Petrol|2023|4.9|39||Retro looks, automatic ease and just enough space for a beach-day bag.
+v16|TVS Ntorq|scooty|Jaffna|2200|2|Automatic|Petrol|2022|4.5|16||A peppy automatic scooter for city errands and short rides to the beach.
+v17|Mahindra Bolero|car|Ella|11000|7|Manual|Diesel|2019|4.3|11||Rugged and roomy — built for tea-country roads and weekend escapes.
+v18|Tata Ace|lorry|Galle|13500|2|Manual|Diesel|2020|4.2|8||A compact cargo carrier for small loads and tight city streets.
