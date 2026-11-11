@@ -88,6 +88,8 @@
             '<strong>' + window.Veha.esc(user.name) + '</strong>' +
             '<span>' + window.Veha.esc(user.email) + '</span>' +
           '</div>' +
+        '<a href="profile.html">' + window.Veha.icon('user') + 'My profile</a>' +
+        '<a href="update-profile.html">' + window.Veha.icon('edit') + 'Edit profile</a>' +
           '<a href="bookings.html">' + window.Veha.icon('calendar') + 'My bookings</a>' +
           '<a href="vehicles.html">' + window.Veha.icon('car') + 'Browse vehicles</a>' +
           (window.Veha.isAdmin() ? '<a href="dashboard.html">' + window.Veha.icon('grid') + 'Admin dashboard</a>' : '') +
