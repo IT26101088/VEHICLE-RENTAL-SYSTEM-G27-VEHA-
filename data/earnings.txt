@@ -1,0 +1,6 @@
+VEH-8K2M1A|2026-11-03|Toyota Axio|car|nimal@example.com|Completed|21500
+VEH-2L5T6B|2026-10-26|Mitsubishi Rosa|bus|ravi@example.com|Completed|56500
+VEH-5F27QY6|2026-11-03|Toyota Alphard|luxury|hasithimalka98@gmail.com|Completed|100100
+VEH-5QJSPDR|2026-11-12|Toyota Alphard|luxury|admin|Completed|100100
+VEH-C32ML9F|2026-11-12|Mercedes-Benz E-Class|luxury|admin|Completed|118100
+VEH-C8HK81L|2026-11-12|Bajaj RE Tuk Tuk|threewheel|admin|Completed|13700

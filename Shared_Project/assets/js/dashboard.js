@@ -149,14 +149,17 @@
       }
     ];
 
-    els.statCards.innerHTML = cards.map(function (card) {
-      return '<article class="dash-stat">' +
+    els.statCards.innerHTML = cards.map(function (card, i) {
+      var gone = isHidden('stat:' + i);
+      if (gone) card = { icon: card.icon, tone: card.tone, label: card.label, value: '\u2014', note: 'Data deleted' };
+      return '<article class="dash-stat' + (gone ? ' is-cleared' : '') + '">' +
         '<div class="dash-stat__top">' +
           '<span class="dash-stat__label">' + V.esc(card.label) + '</span>' +
           '<span class="dash-stat__ico dash-stat__ico--' + card.tone + '">' + V.icon(card.icon) + '</span>' +
         '</div>' +
         '<strong>' + V.esc(card.value) + '</strong>' +
         '<span>' + V.esc(card.note) + '</span>' +
+        (gone ? '' : delBtn('stat:' + i)) +
       '</article>';
     }).join('');
   }
@@ -169,11 +172,11 @@
 
     var rows = V.TYPES
       .map(function (type) { return { type: type, count: counts[type.id] || 0 }; })
-      .filter(function (row) { return row.count > 0; })
+      .filter(function (row) { return row.count > 0 && !isHidden('mix:' + row.type.id); })
       .sort(function (a, b) { return b.count - a.count; });
 
     if (!rows.length) {
-      els.fleetMix.innerHTML = '<p class="table-empty">No vehicles in the fleet yet.</p>';
+      els.fleetMix.innerHTML = '<p class="table-empty">' + (vehicles.length ? 'Fleet mix data deleted. Use Restore to bring it back.' : 'No vehicles in the fleet yet.') + '</p>';
       return;
     }
 
@@ -182,7 +185,7 @@
       var share = total ? Math.round((row.count / total) * 100) : 0;
       return '<div class="fleet-row">' +
         '<div class="fleet-row__top"><span>' + V.esc(row.type.name) + '</span>' +
-        '<strong>' + row.count + ' · ' + share + '%</strong></div>' +
+        '<strong>' + row.count + ' · ' + share + '%</strong>' + delBtn('mix:' + row.type.id) + '</div>' +
         '<div class="fleet-bar"><span style="width:' + Math.max(6, Math.round((row.count / max) * 100)) + '%"></span></div>' +
       '</div>';
     }).join('');
@@ -192,11 +195,13 @@
     var bookings = V.getBookings()
       .slice()
       .sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); })
+      .filter(function (b) { return !isHidden('booking:' + b.id); })
       .slice(0, 5);
     var tbody = $('#recentBookings tbody');
 
     if (!bookings.length) {
-      tbody.innerHTML = '<tr><td class="table-empty" colspan="5">No bookings yet.</td></tr>';
+      tbody.innerHTML = '<tr><td class="table-empty" colspan="6">' +
+        (V.getBookings().length ? 'Booking data deleted. Use Restore to bring it back.' : 'No bookings yet.') + '</td></tr>';
       return;
     }
 
@@ -210,6 +215,7 @@
         '<td class="table-dates">' + V.esc(dateRange(booking)) + '</td>' +
         '<td>' + V.esc(V.money(booking.total)) + '</td>' +
         '<td>' + statusPill(booking.status) + '</td>' +
+        '<td><div class="table-actions">' + delBtn('booking:' + booking.id) + '</div></td>' +
       '</tr>';
     }).join('');
   }
@@ -372,6 +378,583 @@
     }).join('');
   }
 
+
+  /* ---------- Overview tools: delete / restore, report, CSV export ---------- */
+
+  var HIDE_KEY = 'veha_overview_hidden';
+  var ovHidden = loadHidden();
+  var reportText = '';
+
+  function loadHidden() {
+    try {
+      var list = JSON.parse(window.localStorage.getItem(HIDE_KEY));
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+  function saveHidden() {
+    try { window.localStorage.setItem(HIDE_KEY, JSON.stringify(ovHidden)); } catch (e) { /* storage unavailable */ }
+  }
+  function isHidden(key) { return ovHidden.indexOf(key) !== -1; }
+  function clearHidden() { ovHidden = []; saveHidden(); }
+  function delBtn(key) {
+    return '<button class="ov-del" type="button" data-ov-del="' + V.esc(key) + '">Delete</button>';
+  }
+
+  function renderOverview() {
+    renderStats();
+    renderFleetMix();
+    renderRecentBookings();
+    renderEarnings();
+    renderOverviewTools();
+  }
+
+  function renderOverviewTools() {
+    var restore = $('#btnRestore');
+    if (!restore) return;
+    restore.textContent = 'Restore (' + ovHidden.length + ')';
+    restore.disabled = !ovHidden.length;
+  }
+
+  function deleteAllOverview() {
+    var keys = ['stat:0', 'stat:1', 'stat:2', 'stat:3'];
+    V.getBookings().forEach(function (b) { keys.push('booking:' + b.id); });
+    V.TYPES.forEach(function (t) { keys.push('mix:' + t.id); keys.push('etype:' + t.id); });
+    ['earn:0', 'earn:1', 'earn:2', 'earn:3', 'earn:4'].forEach(function (k) { keys.push(k); });
+    earningsData('all').byVehicle.forEach(function (v) { keys.push('evehicle:' + v.id); });
+    keys.forEach(function (k) { if (ovHidden.indexOf(k) === -1) ovHidden.push(k); });
+    saveHidden();
+    renderOverview();
+    V.toast('Overview data deleted. Use Restore to bring it back.');
+  }
+
+  function restoreOverview() {
+    if (!ovHidden.length) return;
+    clearHidden();
+    renderOverview();
+    V.toast('Overview data restored.');
+  }
+
+  /* CSV */
+  function csvCell(value) {
+    var text = value === null || value === undefined ? '' : String(value);
+    if (/^[=+\-@\t\r]/.test(text) && isNaN(Number(text))) text = "'" + text; /* spreadsheet formula guard */
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+  function download(name, text, type) {
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([text], { type: type }));
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+  }
+  function sortedBookings() {
+    return V.getBookings().slice().sort(function (a, b) {
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+  }
+  function bookingRow(b) {
+    var vehicle = V.getVehicle(b.vehicleId);
+    return [b.id, b.userName || 'Guest', b.userEmail || '', vehicleName(b.vehicleId),
+      b.city || (vehicle ? vehicle.city : ''), b.pickup, b.ret, Number(b.total) || 0, b.status];
+  }
+  var BOOKING_HEAD = ['Reference', 'Customer', 'Email', 'Vehicle', 'City', 'Pickup', 'Return', 'Total (Rs)', 'Status'];
+
+  function exportData(view) {
+    if (view === 'vehicles') {
+      var q = state.vehicleQuery.trim().toLowerCase();
+      return {
+        head: ['Name', 'Type', 'City', 'Price per day (Rs)', 'Seats', 'Transmission', 'Fuel', 'Year', 'Rating', 'Availability'],
+        rows: V.getVehicles().filter(function (v) {
+          if (!q) return true;
+          var t = V.typeMeta(v.type);
+          return [v.name, v.city, t.singular, t.name, v.tag].join(' ').toLowerCase().indexOf(q) !== -1;
+        }).map(function (v) {
+          var until = V.rentedUntil(v.id);
+          return [v.name, V.typeMeta(v.type).singular, v.city, v.price, v.seats, v.transmission, v.fuel, v.year, v.rating,
+            until ? 'Rented until ' + until : 'Available'];
+        })
+      };
+    }
+    if (view === 'bookings') {
+      return {
+        head: BOOKING_HEAD,
+        rows: sortedBookings().filter(function (b) {
+          return state.bookingFilter === 'all' || b.status === state.bookingFilter;
+        }).map(bookingRow)
+      };
+    }
+    if (view === 'rented') {
+      return {
+        head: ['Rental', 'Booking', 'Vehicle', 'Customer', 'Pickup', 'Return'],
+        rows: (V.getRented() || []).map(function (r) {
+          return [r.rentalId, r.bookingId, r.vehicleName, r.customerEmail || '', r.pickup, r.ret];
+        })
+      };
+    }
+    return {
+      head: BOOKING_HEAD,
+      rows: sortedBookings().filter(function (b) { return !isHidden('booking:' + b.id); }).slice(0, 5).map(bookingRow)
+    };
+  }
+
+  function exportCurrent() {
+    var data = exportData(state.view);
+    if (!data.rows.length) { V.toast('Nothing to export in this view.'); return; }
+    var csv = [data.head].concat(data.rows).map(function (row) { return row.map(csvCell).join(','); }).join('\r\n');
+    download('veha-' + state.view + '-' + new Date().toISOString().slice(0, 10) + '.csv', '\ufeff' + csv, 'text/csv;charset=utf-8');
+    V.toast('Exported ' + data.rows.length + (data.rows.length === 1 ? ' row.' : ' rows.'));
+  }
+
+  /* Report */
+  function countBy(list, pick) {
+    var out = {};
+    list.forEach(function (item) { var k = pick(item) || '\u2014'; out[k] = (out[k] || 0) + 1; });
+    return Object.keys(out).map(function (k) { return [k, out[k]]; });
+  }
+  function buildReport() {
+    var vehicles = V.getVehicles();
+    var bookings = V.getBookings();
+    var rented = V.getRented();
+    var revenue = bookings.reduce(function (sum, b) {
+      return b.status === 'Confirmed' || b.status === 'Completed' ? sum + (Number(b.total) || 0) : sum;
+    }, 0);
+    var rentedNow = vehicles.filter(function (v) { return V.rentedUntil(v.id); }).length;
+    var rating = vehicles.length
+      ? (vehicles.reduce(function (s, v) { return s + (Number(v.rating) || 0); }, 0) / vehicles.length).toFixed(1) : '\u2014';
+
+    var byStatus = STATUSES.map(function (st) {
+      return [st, bookings.filter(function (b) { return b.status === st; }).length];
+    });
+    return [
+      { title: 'Fleet', rows: [
+        ['Total vehicles', vehicles.length],
+        ['Available now', vehicles.length - rentedNow],
+        ['Rented now', rentedNow],
+        ['Average rating', rating]
+      ] },
+      { title: 'Earnings (all time)', rows: earningsReportRows('all') },
+      { title: 'Bookings', rows: [['Total bookings', bookings.length]].concat(byStatus).concat([['Booked revenue', V.money(revenue)]]) },
+      { title: 'Rented vehicle records', rows: [['Nodes in linked list', rented === null ? 'Java server not running' : rented.length]] },
+      { title: 'Vehicles by type', rows: countBy(vehicles, function (v) { return V.typeMeta(v.type).name; }) },
+      { title: 'Vehicles by city', rows: countBy(vehicles, function (v) { return v.city; }) }
+    ];
+  }
+
+  function openReport(customSections, title) {
+    var modal = $('#reportModal');
+    if (!modal) return;
+    var sections = customSections || buildReport();
+    var stamp = new Date().toLocaleString();
+    $('#reportTitle').textContent = title || 'VEHA report';
+    reportText = (title || 'VEHA FLEET REPORT').toUpperCase() + '\nGenerated: ' + stamp + '\n';
+    $('#reportStamp').textContent = 'Generated ' + stamp;
+    $('#reportBody').innerHTML = sections.map(function (sec) {
+      reportText += '\n' + sec.title.toUpperCase() + '\n';
+      return '<div class="rep-sec"><h3>' + V.esc(sec.title) + '</h3><dl>' + sec.rows.map(function (r) {
+        reportText += '  ' + r[0] + ': ' + r[1] + '\n';
+        return '<dt>' + V.esc(r[0]) + '</dt><dd>' + V.esc(r[1]) + '</dd>';
+      }).join('') + '</dl></div>';
+    }).join('');
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+  }
+  function closeReport() {
+    var modal = $('#reportModal');
+    if (!modal || !modal.classList.contains('is-open')) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+  }
+
+  function handleToolsClick(event) {
+    var t = event.target;
+    var del = t.closest('[data-ov-del]');
+    if (del) {
+      var key = del.getAttribute('data-ov-del');
+      V.confirm({
+        title: 'Delete this data?',
+        message: 'It is cleared from the Overview only. Use Restore to bring it back.',
+        confirmText: 'Delete',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) return;
+        if (ovHidden.indexOf(key) === -1) ovHidden.push(key);
+        saveHidden();
+        renderOverview();
+      });
+      return true;
+    }
+    if (t.closest('#btnDeleteAll')) {
+      V.confirm({
+        title: 'Delete all Overview data?',
+        message: 'Numbers, bookings and fleet mix are cleared from the Overview. Nothing is removed from your fleet or bookings, and Restore brings it back.',
+        confirmText: 'Delete all',
+        danger: true
+      }).then(function (ok) { if (ok) deleteAllOverview(); });
+      return true;
+    }
+    if (t.closest('#btnRestore')) { restoreOverview(); return true; }
+    if (t.closest('#btnReport')) { openReport(); return true; }
+    if (t.closest('#earnReport')) { openReport(earningsReportSections(), 'Earnings report · ' + rangeLabel(state.earnRange)); return true; }
+    if (t.closest('#earnExport')) { exportEarnings(); return true; }
+    if (t.closest('#earnTxt')) {
+      download('earnings.txt', earningsFileText() + '\n', 'text/plain;charset=utf-8');
+      return true;
+    }
+    if (t.closest('#btnExport')) { exportCurrent(); return true; }
+    if (t.closest('[data-rep-close]')) { closeReport(); return true; }
+    if (t.closest('#reportDownload')) {
+      download('veha-report-' + new Date().toISOString().slice(0, 10) + '.txt', reportText, 'text/plain;charset=utf-8');
+      return true;
+    }
+    if (t.closest('#reportPrint')) { window.print(); return true; }
+    return false;
+  }
+
+  function ensureTools() {
+    var style = document.createElement('style');
+    style.textContent =
+      '.ov-toolbar{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-bottom:16px;flex-wrap:wrap}' +
+      '.ov-toolbar__label{margin-right:auto;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.6}' +
+      '.ov-del{font:inherit;font-size:12px;line-height:1;padding:5px 10px;border-radius:999px;border:1px solid rgba(220,60,60,.45);background:transparent;color:#d94343;cursor:pointer}' +
+      '.ov-del:hover{background:rgba(220,60,60,.1)}' +
+      '.dash-stat{position:relative}.dash-stat .ov-del{position:absolute;right:16px;bottom:14px}' +
+      '.dash-stat.is-cleared strong,.dash-stat.is-cleared>span{opacity:.45}' +
+      '.fleet-row__top{display:flex;align-items:center;gap:10px}.fleet-row__top>strong{margin-left:auto}' +
+      '.fleet-row__top .ov-del{margin-left:0}' +
+      '.earn-tiles .dash-stat .ov-del{top:12px;bottom:auto;right:14px}' +
+      '#btnRestore:disabled{opacity:.45;cursor:not-allowed}' +
+      '.earn-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:22px}' +
+      '.earn-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}@media(max-width:800px){.earn-cols{grid-template-columns:1fr}}' +
+      '.earn-total{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(128,128,128,.3);font-size:14px}' +
+      '.dash-stat--total{outline:2px solid rgba(255,106,0,.45);outline-offset:-2px}' +
+      '.earn-sync{font-size:12px;opacity:.7;margin:0 0 14px}' +
+      '.earn-sub{font-size:12px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em;opacity:.65}' +
+      '.rep-sec{margin:0 0 16px}.rep-sec h3{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.7}' +
+      '.rep-sec dl{display:grid;grid-template-columns:1fr auto;gap:6px 16px;margin:0}.rep-sec dd{margin:0;font-weight:600;text-align:right}' +
+      '#reportBody{max-height:60vh;overflow:auto;margin:12px 0}' +
+      '@media print{body>*:not(#reportModal){display:none!important}#reportModal .modal__backdrop,#reportModal .modal__close,#reportModal .dash-modal__actions{display:none!important}#reportModal{position:static!important}#reportBody{max-height:none}}';
+    document.head.appendChild(style);
+
+    var actions = $('.dash__top-actions');
+    if (actions && !$('#btnReport')) {
+      actions.insertAdjacentHTML('afterbegin',
+        '<button class="btn btn--ghost btn--sm" type="button" id="btnReport">Create report</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" id="btnExport">Export CSV</button>');
+    }
+    var overview = $('#view-overview');
+    if (overview && !$('#btnDeleteAll')) {
+      overview.insertAdjacentHTML('afterbegin',
+        '<div class="ov-toolbar"><span class="ov-toolbar__label">Overview data</span>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="btnDeleteAll">Delete all</button>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="btnRestore" disabled>Restore (0)</button></div>');
+    }
+    if (overview && !$('#earningsCard')) {
+      var card = '<div class="dash-card" id="earningsCard"><div class="dash-card__head"><div><h2>Earnings</h2>' +
+        '<p id="earnSub">Revenue by booking date</p></div>' +
+        '<div class="dash-tools"><select class="dash-select" id="earnRange" aria-label="Earnings period">' +
+        RANGES.map(function (r) { return '<option value="' + r[0] + '">' + r[1] + '</option>'; }).join('') + '</select>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="earnReport">Create report</button>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="earnExport">Export CSV</button>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="earnTxt">Download .txt</button></div></div>' +
+        '<p class="earn-sync" id="earnSyncState"></p><div id="earningsBody"></div></div>';
+      var quick = $('.quick-actions__row');
+      var quickCard = quick && quick.closest('.dash-card');
+      if (quickCard) quickCard.insertAdjacentHTML('beforebegin', card);
+      else overview.insertAdjacentHTML('beforeend', card);
+    }
+    var headRow = $('#recentBookings thead tr');
+    if (headRow && headRow.children.length === 5) headRow.insertAdjacentHTML('beforeend', '<th class="align-right">Actions</th>');
+
+    if (!$('#reportModal')) {
+      document.body.insertAdjacentHTML('beforeend',
+        '<div class="modal" id="reportModal" aria-hidden="true"><div class="modal__backdrop" data-rep-close></div>' +
+        '<div class="modal__card dash-modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">' +
+        '<button class="modal__close" type="button" data-rep-close aria-label="Close">&times;</button>' +
+        '<h2 id="reportTitle">VEHA report</h2><p id="reportStamp"></p><div id="reportBody"></div>' +
+        '<div class="dash-modal__actions">' +
+        '<button class="btn btn--ghost btn--sm" type="button" data-rep-close>Close</button>' +
+        '<button class="btn btn--ghost btn--sm" type="button" id="reportPrint">Print</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" id="reportDownload">Download .txt</button>' +
+        '</div></div></div>');
+    }
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeReport(); });
+    startAutoSync();
+    document.addEventListener('change', function (event) {
+      if (event.target && event.target.id === 'earnRange') {
+        state.earnRange = event.target.value;
+        try { window.localStorage.setItem('veha_earn_range', state.earnRange); } catch (e) { /* ignore */ }
+        renderEarnings();
+      }
+    });
+  }
+
+
+  /* ---------- Earnings ---------- */
+
+  var RANGES = [['today', 'Today'], ['yesterday', 'Yesterday'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['all', 'All time']];
+  state.earnRange = (function () {
+    try {
+      var saved = window.localStorage.getItem('veha_earn_range');
+      return RANGES.some(function (r) { return r[0] === saved; }) ? saved : 'all';
+    } catch (e) { return 'all'; }
+  })();
+  function rangeLabel(range) {
+    return RANGES.filter(function (r) { return r[0] === range; })[0][1];
+  }
+  function startOfDay(offset) {
+    var d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + offset).getTime();
+  }
+  /* an earning is dated by when the booking was made (falls back to pickup date) */
+  function bookingDate(b) {
+    var d = b.createdAt ? new Date(b.createdAt) : null;
+    if (!d || isNaN(d.getTime())) d = b.pickup ? new Date(String(b.pickup).slice(0, 10) + 'T00:00:00') : null;
+    return d && !isNaN(d.getTime()) ? d : null;
+  }
+  function inRange(b, range) {
+    if (range === 'all') return true;
+    var d = bookingDate(b);
+    if (!d) return false;
+    var t = d.getTime();
+    if (range === 'today') return t >= startOfDay(0) && t < startOfDay(1);
+    if (range === 'yesterday') return t >= startOfDay(-1) && t < startOfDay(0);
+    var days = Number(range);
+    return t >= startOfDay(-(days - 1)) && t < startOfDay(1);
+  }
+
+  function earningsData(range) {
+    range = range || state.earnRange;
+    var sums = { Completed: 0, Confirmed: 0, Pending: 0, Cancelled: 0 };
+    var counts = { Completed: 0, Confirmed: 0 };
+    var byType = {}, byVehicle = {};
+    V.getBookings().filter(function (b) { return inRange(b, range); }).forEach(function (b) {
+      var amount = Number(b.total) || 0;
+      if (sums[b.status] !== undefined) sums[b.status] += amount;
+      if (b.status !== 'Completed' && b.status !== 'Confirmed') return;
+      counts[b.status] += 1;
+      var vehicle = V.getVehicle(b.vehicleId);
+      var typeId = vehicle ? vehicle.type : 'removed';
+      byType[typeId] = (byType[typeId] || 0) + amount;
+      var vid = b.vehicleId || 'removed';
+      if (!byVehicle[vid]) byVehicle[vid] = { id: vid, name: vehicleName(b.vehicleId), amount: 0, trips: 0 };
+      byVehicle[vid].amount += amount;
+      byVehicle[vid].trips += 1;
+    });
+    var booked = sums.Completed + sums.Confirmed;
+    var trips = counts.Completed + counts.Confirmed;
+    return {
+      sums: sums,
+      counts: counts,
+      booked: booked,
+      average: trips ? Math.round(booked / trips) : 0,
+      byType: Object.keys(byType).map(function (id) {
+        var meta = id === 'removed' ? { name: 'Removed vehicles' } : V.typeMeta(id);
+        return { id: id, name: meta.name, amount: byType[id] };
+      }).sort(function (a, b) { return b.amount - a.amount; }),
+      byVehicle: Object.keys(byVehicle).map(function (k) { return byVehicle[k]; })
+        .sort(function (a, b) { return b.amount - a.amount; })
+    };
+  }
+
+  function earningsReportRows(range) {
+    var e = earningsData(range);
+    return [
+      ['Earned (completed)', V.money(e.sums.Completed)],
+      ['Upcoming (confirmed)', V.money(e.sums.Confirmed)],
+      ['Total earnings (completed + confirmed)', V.money(e.booked)],
+      ['Pending (not yet confirmed)', V.money(e.sums.Pending)],
+      ['Lost to cancellations', V.money(e.sums.Cancelled)],
+      ['Average booking value', V.money(e.average)]
+    ];
+  }
+
+  function earnRows(list, prefix, nameOf, totalLabel) {
+    var visible = list.filter(function (r) { return !isHidden(prefix + r.id); });
+    if (!visible.length) {
+      return '<p class="table-empty">' + (list.length ? 'Earnings data deleted. Use Restore to bring it back.' : 'No earnings in this period.') + '</p>';
+    }
+    var max = visible[0].amount || 1;
+    var sum = visible.reduce(function (t, r) { return t + r.amount; }, 0);
+    var footer = '<div class="earn-total"><span>' + V.esc(totalLabel || 'Total') + '</span><strong>' + V.esc(V.money(sum)) + '</strong></div>';
+    return visible.map(function (r) {
+      return '<div class="fleet-row"><div class="fleet-row__top"><span>' + V.esc(nameOf(r)) + '</span>' +
+        '<strong>' + V.esc(V.money(r.amount)) + '</strong>' + delBtn(prefix + r.id) + '</div>' +
+        '<div class="fleet-bar"><span style="width:' + Math.max(6, Math.round((r.amount / max) * 100)) + '%"></span></div></div>';
+    }).join('') + footer;
+  }
+
+  function renderEarnings() {
+    var box = $('#earningsBody');
+    if (!box) return;
+    var e = earningsData();
+    var sel = $('#earnRange'); if (sel && sel.value !== state.earnRange) sel.value = state.earnRange;
+    var sub = $('#earnSub'); if (sub) sub.textContent = 'Revenue by booking date · ' + rangeLabel(state.earnRange);
+    var tiles = [
+      { key: 4, label: 'Total earnings', value: V.money(e.booked), note: V.money(e.sums.Completed) + ' received + ' + V.money(e.sums.Confirmed) + ' upcoming', total: true },
+      { key: 0, label: 'Completed trips', value: String(e.counts.Completed), note: V.money(e.sums.Completed) + ' received' },
+      { key: 1, label: 'Upcoming', value: V.money(e.sums.Confirmed), note: e.counts.Confirmed + (e.counts.Confirmed === 1 ? ' confirmed trip' : ' confirmed trips') + ', not yet returned' },
+      { key: 2, label: 'Pending', value: V.money(e.sums.Pending), note: 'awaiting confirmation' },
+      { key: 3, label: 'Avg booking value', value: V.money(e.average), note: 'confirmed and completed' }
+    ];
+    box.innerHTML =
+      '<div class="earn-tiles">' + tiles.map(function (t) {
+        var gone = isHidden('earn:' + t.key);
+        return '<article class="dash-stat' + (t.total ? ' dash-stat--total' : '') + (gone ? ' is-cleared' : '') + '">' +
+          '<div class="dash-stat__top"><span class="dash-stat__label">' + V.esc(t.label) + '</span></div>' +
+          '<strong>' + V.esc(gone ? '\u2014' : t.value) + '</strong>' +
+          '<span>' + V.esc(gone ? 'Data deleted' : t.note) + '</span>' +
+          (gone ? '' : delBtn('earn:' + t.key)) + '</article>';
+      }).join('') + '</div>' +
+      '<div class="earn-cols">' +
+        '<div><h3 class="earn-sub">Earnings by vehicle type</h3>' + earnRows(e.byType, 'etype:', function (r) { return r.name; }, 'Total') + '</div>' +
+        '<div><h3 class="earn-sub">Top earning vehicles</h3>' + earnRows(e.byVehicle.slice(0, 5), 'evehicle:', function (r) { return r.name + ' \u00b7 ' + r.trips + (r.trips === 1 ? ' trip' : ' trips'); }, 'Total (top 5)') + '</div>' +
+      '</div>';
+    scheduleSync();
+  }
+
+
+  /* ---------- Earnings records, text-file storage, report, export ---------- */
+
+  var EARN_API = window.VEHA_EARNINGS_API || '/api/earnings';
+  var syncTimer = null;
+  var lastSynced = null;
+
+  function cleanField(v) { return String(v === null || v === undefined ? '' : v).replace(/[|\r\n]+/g, ' ').trim(); }
+  function isoDay(d) {
+    return d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
+  }
+  /* one record per booking that earns (or will earn) money */
+  function earningRecords() {
+    return V.getBookings().filter(function (b) {
+      return b.status === 'Completed' || b.status === 'Confirmed' || b.status === 'Pending';
+    }).map(function (b) {
+      var vehicle = V.getVehicle(b.vehicleId);
+      return {
+        id: b.id, booking: b, vehicleId: b.vehicleId || 'removed',
+        date: isoDay(bookingDate(b)), vehicle: vehicleName(b.vehicleId),
+        type: vehicle ? vehicle.type : 'removed',
+        customer: b.userEmail || b.userName || 'Guest',
+        status: b.status, amount: Number(b.total) || 0
+      };
+    });
+  }
+  /* a record is removed from the file when its tile, row or booking was deleted on the Overview */
+  function recordHidden(r) {
+    return isHidden('booking:' + r.id) || isHidden('evehicle:' + r.vehicleId) || isHidden('etype:' + r.type) ||
+      (r.status === 'Completed' && isHidden('earn:0')) ||
+      (r.status === 'Confirmed' && isHidden('earn:1')) ||
+      (r.status === 'Pending' && isHidden('earn:2')) ||
+      ((r.status === 'Completed' || r.status === 'Confirmed') && isHidden('earn:4'));
+  }
+  function recordLine(r) {
+    return [r.id, r.date, r.vehicle, r.type, r.customer, r.status, r.amount].map(cleanField).join('|');
+  }
+  function earningsFileText() {
+    return earningRecords().filter(function (r) { return !recordHidden(r); }).map(recordLine).join('\n');
+  }
+
+  function setSyncState(text, ok) {
+    var el = $('#earnSyncState');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = ok === false ? '#d94343' : '';
+  }
+  var lastSentText = null;
+  function scheduleSync() {
+    window.clearTimeout(syncTimer);
+    syncTimer = window.setTimeout(function () { syncEarningsFile(false); }, 250);
+  }
+  function syncEarningsFile(force) {
+    var text = earningsFileText();
+    var count = text ? text.split('\n').length : 0;
+    if (window.location.protocol === 'file:' || !window.fetch) {
+      setSyncState('Not saved to earnings.txt: open the dashboard through the Java server. You can still download the file.', false);
+      return;
+    }
+    if (!force && text === lastSentText) return;
+    postEarnings(text)
+      .then(function (body) {
+        lastSentText = text;
+        lastSynced = new Date();
+        var path = /->\s*(.+)$/.exec(body || '');
+        setSyncState('Auto-saved to ' + (path ? path[1] : 'data/earnings.txt') + ' \u00b7 ' + count + (count === 1 ? ' record' : ' records') +
+          ' \u00b7 updated ' + lastSynced.toLocaleTimeString(), true);
+      })
+      .catch(function (err) {
+        var where = err && err.url ? ' (' + err.url + ')' : '';
+        if (err && /Unknown resource/i.test(err.body || '')) {
+          setSyncState('The Java server that answered is still the OLD version (it does not know /api/earnings). Stop it completely, recompile VehaServer.java and start it again.', false);
+        } else if (err && err.status) {
+          setSyncState('earnings.txt not updated: HTTP ' + err.status + where + '. This address is not the VEHA Java server. Open the dashboard from http://localhost:8080/ .', false);
+        } else {
+          setSyncState('earnings.txt not updated: the Java server is not running or is on another address. Start it and open the dashboard from http://localhost:8080/ .', false);
+        }
+      });
+  }
+  /* try this page's own server first, then the default VEHA server (http://localhost:8080) */
+  function postEarnings(text) {
+    var urls = [EARN_API];
+    if (!window.VEHA_EARNINGS_API && window.location.origin !== 'http://localhost:8080') urls.push('http://localhost:8080/api/earnings');
+    var errors = [];
+    function attempt(i) {
+      return window.fetch(urls[i], { method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: text })
+        .then(function (res) {
+          return res.text().then(function (body) {
+            if (!res.ok) { var e = new Error('HTTP ' + res.status); e.status = res.status; e.body = body; e.url = urls[i]; throw e; }
+            return body;
+          });
+        })
+        .catch(function (err) {
+          errors.push(err);
+          if (i + 1 < urls.length) return attempt(i + 1);
+          var withStatus = errors.filter(function (e) { return e && e.status; })[0];
+          throw withStatus || err;
+        });
+    }
+    return attempt(0);
+  }
+  /* keep the file current all the time: on every change, every few seconds, on other-tab changes, and when the tab closes */
+  function startAutoSync() {
+    window.setInterval(function () {
+      if (earningsFileText() !== lastSentText) syncEarningsFile(false);
+    }, 5000);
+    window.addEventListener('storage', function () { renderAll(); });
+    window.addEventListener('pagehide', function () {
+      var text = earningsFileText();
+      if (text !== lastSentText && window.location.protocol !== 'file:' && navigator.sendBeacon) {
+        navigator.sendBeacon(EARN_API, new Blob([text], { type: 'text/plain;charset=UTF-8' }));
+      }
+    });
+  }
+
+  function visibleEarningRecords() {
+    return earningRecords().filter(function (r) { return !recordHidden(r) && inRange(r.booking, state.earnRange); });
+  }
+  function exportEarnings() {
+    var recs = visibleEarningRecords();
+    if (!recs.length) { V.toast('No earnings in ' + rangeLabel(state.earnRange).toLowerCase() + '.'); return; }
+    var head = ['Booking', 'Date', 'Vehicle', 'Type', 'Customer', 'Status', 'Amount (Rs)'];
+    var rows = recs.map(function (r) { return [r.id, r.date, r.vehicle, r.type === 'removed' ? 'Removed vehicle' : V.typeMeta(r.type).name, r.customer, r.status, r.amount]; });
+    var total = recs.reduce(function (t, r) { return t + (r.status === 'Pending' ? 0 : r.amount); }, 0);
+    rows.push(['', '', '', '', '', 'TOTAL (completed + confirmed)', total]);
+    var csv = [head].concat(rows).map(function (row) { return row.map(csvCell).join(','); }).join('\r\n');
+    download('veha-earnings-' + state.earnRange + '-' + new Date().toISOString().slice(0, 10) + '.csv', '\ufeff' + csv, 'text/csv;charset=utf-8');
+    V.toast('Exported ' + recs.length + (recs.length === 1 ? ' earning.' : ' earnings.'));
+  }
+  function earningsReportSections() {
+    var e = earningsData(state.earnRange);
+    var label = rangeLabel(state.earnRange);
+    return [
+      { title: 'Summary \u00b7 ' + label, rows: earningsReportRows(state.earnRange) },
+      { title: 'By vehicle type', rows: e.byType.length ? e.byType.map(function (t) { return [t.name, V.money(t.amount)]; }) : [['No earnings', '\u2014']] },
+      { title: 'Top earning vehicles', rows: e.byVehicle.length ? e.byVehicle.slice(0, 5).map(function (v) { return [v.name + ' (' + v.trips + (v.trips === 1 ? ' trip)' : ' trips)'), V.money(v.amount)]; }) : [['No earnings', '\u2014']] }
+    ];
+  }
+
   /* ---------- Render all ---------- */
 
   function renderCounts() {
@@ -389,6 +972,8 @@
     renderVehicleTable();
     renderBookingTable();
     renderRented();
+    renderEarnings();
+    renderOverviewTools();
   }
 
   /* ---------- Vehicle modal ---------- */
@@ -552,6 +1137,7 @@
     }).then(function (ok) {
       if (!ok) return;
       V.resetDemo();
+      clearHidden();
       renderAll();
       V.toast('Demo data restored.');
     });
@@ -593,6 +1179,7 @@
     });
 
     document.addEventListener('click', function (event) {
+      if (handleToolsClick(event)) return;
       var add = event.target.closest('[data-add-vehicle]');
       if (add) {
         openVehicleModal(null);
@@ -677,6 +1264,7 @@
 
   function init() {
     cache();
+    ensureTools();
 
     els.fType.innerHTML = V.TYPES.map(function (type) {
       return '<option value="' + type.id + '">' + V.esc(type.singular) + '</option>';

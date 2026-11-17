@@ -20,7 +20,8 @@ public class VehaServer {
     private static final Path DATA = ROOT.resolve("data");
     private static final Map<String,String> FILES = Map.of(
         "users", "users.txt", "vehicles", "vehicles.txt",
-        "bookings", "bookings.txt", "payments", "payments.txt", "rented", "rented.txt");
+        "bookings", "bookings.txt", "payments", "payments.txt", "rented", "rented.txt",
+        "earnings", "earnings.txt");
     /** Member 3: linked list of currently rented / reserved vehicles (persisted in data/rented.txt). */
     private static final RentedVehicleLinkedList RENTED = new RentedVehicleLinkedList();
 
@@ -45,6 +46,7 @@ public class VehaServer {
         String[] bits=path.split("/"); String resource=bits[0];
         try {
             if ("report".equals(resource) && "GET".equals(x.getRequestMethod())) { report(x); return; }
+            if ("earnings".equals(resource)) { earnings(x, bits); return; }
             if (!FILES.containsKey(resource)) { send(x,404,"{\"error\":\"Unknown resource\"}"); return; }
             if ("rented".equals(resource)) { rented(x, bits); return; }
             if ("vehicles".equals(resource) && bits.length>1 && "sorted".equals(bits[1]) && "GET".equals(x.getRequestMethod())) { sortedVehicles(x); return; }
@@ -81,6 +83,63 @@ public class VehaServer {
           catch (Exception e) { send(x,500,"{\"error\":"+quote(e.getMessage()==null?"Server error":e.getMessage())+"}"); }
     }
 
+
+    // ---------- Member 5: earnings text file (data/earnings.txt) ----------
+
+    /** One record per line: bookingId|date|vehicle|type|customer|status|amount */
+    private static boolean validEarning(String line) {
+        String[] f = line.split("\\|", -1);
+        if (f.length != 7 || f[0].trim().isEmpty()) return false;
+        try { Double.parseDouble(f[6].trim()); return true; } catch (NumberFormatException e) { return false; }
+    }
+
+    private static void writeLinesAtomic(Path file, List<String> lines) throws IOException {
+        Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+        Files.write(tmp, lines, StandardCharsets.UTF_8);
+        try { Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
+        catch (AtomicMoveNotSupportedException e) { Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING); }
+    }
+
+    private static void sendText(HttpExchange x, int status, String body) throws IOException {
+        byte[] b = body.getBytes(StandardCharsets.UTF_8);
+        x.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+        x.sendResponseHeaders(status, b.length);
+        try (OutputStream o = x.getResponseBody()) { o.write(b); }
+    }
+
+    /**
+     * GET    /api/earnings               - the file contents (text/plain)
+     * POST   /api/earnings  (text body)  - replaces the file with the posted records (invalid lines are dropped)
+     * DELETE /api/earnings/{bookingId}   - removes one booking's record
+     */
+    private static synchronized void earnings(HttpExchange x, String[] bits) throws IOException {
+        Path file = DATA.resolve("earnings.txt");
+        String method = x.getRequestMethod();
+        List<String> rows = new ArrayList<>();
+        for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) if (validEarning(line)) rows.add(line);
+
+        if ("GET".equals(method)) { sendText(x, 200, String.join("\n", rows)); return; }
+        if ("POST".equals(method)) {
+            byte[] raw = x.getRequestBody().readNBytes(2 * 1024 * 1024 + 1);
+            if (raw.length > 2 * 1024 * 1024) { sendText(x, 413, "Body too large"); return; }
+            List<String> clean = new ArrayList<>();
+            for (String line : new String(raw, StandardCharsets.UTF_8).split("\\r?\\n")) {
+                if (validEarning(line.trim())) clean.add(line.trim());
+            }
+            writeLinesAtomic(file, clean);
+            sendText(x, 200, "saved " + clean.size() + " -> " + file);
+            return;
+        }
+        if ("DELETE".equals(method)) {
+            if (bits.length < 2) { sendText(x, 400, "booking id required"); return; }
+            String id = URLDecoder.decode(bits[1], StandardCharsets.UTF_8);
+            boolean removed = rows.removeIf(r -> field(r, 0).equals(id));
+            if (removed) writeLinesAtomic(file, rows);
+            sendText(x, removed ? 200 : 404, removed ? "deleted" : "not found");
+            return;
+        }
+        sendText(x, 405, "Method not allowed");
+    }
 
     // ---------- Member 3: rented vehicle records (singly linked list) ----------
 
